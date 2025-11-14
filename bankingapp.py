@@ -364,7 +364,7 @@ class BankingApplication:
 
             if recipient:
                 recipient_id, recipient_name = recipient
-                print(f"Recipient found: {recipient_name}")
+                print(f"Recipient Name: {recipient_name}")
                 break
             else:
                 print("Account number not found")
