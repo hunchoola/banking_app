@@ -145,7 +145,7 @@ class BankingApplication:
             print(f"Your account number: {account_number}")
             print("You can now login")
             print("Thanks for choosen SQI Bank")
-            time.sleep(2)
+            time.sleep(3)
 
         except sqlite3.Error as e:
             print(f"Registration failed: {e}")
@@ -228,7 +228,7 @@ class BankingApplication:
 
             print(f"\nSuccessfully deposited ₦{amount:.2f}")
             print(f"New balance: ₦{self.current_user['balance']:.2f}")
-            time.sleep(2)
+            time.sleep(3)
 
         except sqlite3.Error as e:
             print(f"✗ Deposit failed: {e}")
@@ -277,7 +277,7 @@ class BankingApplication:
 
             print(f"\n Successfully withdrew ₦{amount:.2f}")
             print(f" New balance: ₦{self.current_user['balance']:.2f}")
-            time.sleep(2)
+            time.sleep(3)
 
         except sqlite3.Error as e:
             print(f"Withdrawal failed: {e}")
@@ -300,7 +300,7 @@ class BankingApplication:
         print(f"Username: {self.current_user['username']}")
         print(f"Account Number: {self.current_user['account_number']}")
         print(f"Balance: ₦{self.current_user['balance']:.2f}")
-        time.sleep(3)
+        time.sleep(5)
 
     def view_transaction_history(self):
         """Show all transactions"""
@@ -333,7 +333,8 @@ class BankingApplication:
                     print(
                         f"{type_display:<12} {amount_display:<12} {recipient_display:<12} {timestamp:<20}")
 
-            time.sleep(3)
+            time.sleep(5)
+
 
         except sqlite3.Error as e:
             print(f" Error loading transactions: {e}")
