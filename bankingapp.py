@@ -1,8 +1,8 @@
 import sqlite3
-import hashlib
-import random
 import time
+import hashlib
 from art import text2art
+from utils import *
 
 
 class BankingApplication:
@@ -13,12 +13,11 @@ class BankingApplication:
         self.setup_database()
 
     def setup_database(self):
-        """Create database and tables if they don't exist"""
         try:
             self.conn = sqlite3.connect('banking_app.db')
             self.cursor = self.conn.cursor()
 
-            # users table SQL database
+            # users table
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +30,7 @@ class BankingApplication:
                 )
             ''')
 
-            # transactions table SQL database
+            # transactions table
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS transactions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,50 +48,7 @@ class BankingApplication:
         except sqlite3.Error as e:
             print(f" An error as occured in Database: {e}")
 
-    def hash_password(self, password):
-        return hashlib.sha256(password.encode()).hexdigest()
-
-    def validate_username(self, username):
-        """Check if username meets requirements"""
-        if len(username) < 3 or len(username) > 20:
-            return False, "Username must be 3-20 characters"
-
-        if not username.replace("_", "").isalnum():
-            return False, "Username can only contain letters, numbers, and underscores"
-
-        self.cursor.execute(
-            "SELECT id FROM users WHERE username = ?", (username,))
-        if self.cursor.fetchone():
-            return False, "Username already taken"
-
-        return True, "Valid username"
-
-    def validate_password(self, password):
-        """Check if password is strong enough"""
-        if len(password) < 8:
-            return False, "Password must be at least 8 characters"
-
-        has_upper = any(char.isupper() for char in password)
-        has_lower = any(char.islower() for char in password)
-        has_digit = any(char.isdigit() for char in password)
-
-        if not (has_upper and has_lower and has_digit):
-            return False, "Password must have atleast 1 Capital, lower and number"
-
-        return True, "Strong password"
-
-    def generate_account_number(self):
-        """Create unique 8-digit account number"""
-        while True:
-            account_number = "2" + \
-                str(random.randint(0000000, 9999999)).zfill(7)
-            self.cursor.execute(
-                "SELECT id FROM users WHERE account_number = ?", (account_number,))
-            if not self.cursor.fetchone():
-                return account_number
-
     def register_user(self):
-        """Handle new user registration"""
         print("\n" + "="*10)
         print("CREATE A NEW ACCOUNT")
         print("="*10)
@@ -100,20 +56,20 @@ class BankingApplication:
         # Get username and Validate
         while True:
             username = input("Enter username: ").strip()
-            is_valid, message = self.validate_username(username)
+            is_valid, message = validate_username(self.cursor, username)
             if is_valid:
                 break
             print(message)
 
         # Get password and validation
         while True:
-            password = input("Choose password: ").strip()
-            is_valid, message = self.validate_password(password)
+            password = getpass.getpass("Choose password: ").strip()
+            is_valid, message = validate_password(password)
             if is_valid:
                 break
             print(message)
 
-        # Get full name
+        # Get full name and validation
         full_name = input("Enter your full name: ").strip()
         while len(full_name) < 4:
             print("Full name must be at least 4 characters")
@@ -130,8 +86,8 @@ class BankingApplication:
                 print("Please enter a valid number")
 
         # Account number Generation
-        account_number = self.generate_account_number()
-        hashed_password = self.hash_password(password)
+        account_number = generate_account_number(self.cursor)
+        hashed_password = hash_password(password)
 
         try:
             self.cursor.execute('''
@@ -152,13 +108,12 @@ class BankingApplication:
             self.conn.rollback()
 
     def login_user(self):
-        """Authenticate existing user"""
         print("\n" + "="*40)
         print("ACCOUNT LOGIN")
         print("="*40)
 
         username = input("Username: ").strip()
-        password = input("Password: ").strip()
+        password = getpass.getpass("Password: ").strip()
 
         if not username or not password:
             print("Username and password required")
@@ -172,7 +127,7 @@ class BankingApplication:
 
             user = self.cursor.fetchone()
 
-            if user and user[5] == self.hash_password(password):
+            if user and user[5] == hash_password(password):
                 self.current_user = {
                     'id': user[0],
                     'full_name': user[1],
@@ -188,11 +143,10 @@ class BankingApplication:
                 return False
 
         except sqlite3.Error as e:
-            print(f"✗ Login error: {e}")
+            print(f"Login error: {e}")
             return False
 
     def deposit(self):
-        """Add money to account"""
         print("\n" + "="*40)
         print("DEPOSIT MONEY")
         print("="*40)
@@ -235,7 +189,6 @@ class BankingApplication:
             self.conn.rollback()
 
     def withdraw(self):
-        """Withdraw money from user"""
         print("\n" + "="*40)
         print("WITHDRAW MONEY")
         print("="*40)
@@ -260,7 +213,7 @@ class BankingApplication:
 
                 break
             except ValueError:
-                print(" Please enter a valid number")
+                print("Please enter a valid number")
 
         try:
             self.cursor.execute('''
@@ -284,7 +237,6 @@ class BankingApplication:
             self.conn.rollback()
 
     def check_balance(self):
-        """Check Available account balance"""
         print("\n" + "="*40)
         print("ACCOUNT BALANCE")
         print("="*40)
@@ -292,7 +244,6 @@ class BankingApplication:
         time.sleep(2)
 
     def view_account_details(self):
-        """Show Bank Details"""
         print("\n" + "="*40)
         print("ACCOUNT DETAILS")
         print("="*40)
@@ -303,7 +254,6 @@ class BankingApplication:
         time.sleep(5)
 
     def view_transaction_history(self):
-        """Show all transactions"""
         print("\n" + "="*40)
         print("TRANSACTION HISTORY")
         print("="*40)
@@ -335,12 +285,10 @@ class BankingApplication:
 
             time.sleep(5)
 
-
         except sqlite3.Error as e:
             print(f" Error loading transactions: {e}")
 
     def transfer_money(self):
-        """Send money to another user's account"""
         print("\n" + "="*40)
         print("TRANSFER MONEY")
         print("="*40)
@@ -414,7 +362,7 @@ class BankingApplication:
             self.conn.commit()
             self.current_user['balance'] -= amount
 
-            print(f"\n✓ Transfer successful!")
+            print(f"\n Transfer successful!")
             print(f" Sent ₦{amount:.2f} to account {recipient_account}")
             print(f"New balance: ₦{self.current_user['balance']:.2f}")
             time.sleep(2)
@@ -424,14 +372,12 @@ class BankingApplication:
             self.conn.rollback()
 
     def logout(self):
-        """End user session"""
         print(f"\n Goodbye, {self.current_user['full_name']}!")
         print(" Thank you for banking with SQI Bank!")
         self.current_user = None
         time.sleep(2)
 
     def display_menu(self):
-        """Show banking options for logged-in users"""
         while self.current_user:
             print("\n" + "="*50)
             print("BANKING APPLICATION - MAIN MENU")
@@ -447,8 +393,7 @@ class BankingApplication:
             print("7. Logout")
             print("="*25)
 
-            choice = input("Enter your choice (1-7): ").strip()
-
+            choice = input("Enter your choice (1-7): ")
             if choice == '1':
                 self.deposit()
             elif choice == '2':
@@ -468,7 +413,6 @@ class BankingApplication:
                 time.sleep(1)
 
     def display_welcome_menu(self):
-        """Show initial options for non-logged-in users"""
         while True:
             print("\n" + "="*25)
             print("WELCOME TO SQI BANK")
@@ -478,7 +422,7 @@ class BankingApplication:
             print("3. Exit")
             print("="*25)
 
-            choice = input("Enter your choice (1-3): ").strip()
+            choice = input("Enter your choice (1-3): ")
 
             if choice == '1':
                 self.register_user()
@@ -492,28 +436,25 @@ class BankingApplication:
                     self.display_menu()
 
             elif choice == '3':
-                print("\nThank you for using SQI Bank. Goodbye!")
+                print("\nThank you for banking with SQI Bank. Goodbye!")
                 break
             else:
                 print("Invalid choice. Please enter 1-3.")
                 time.sleep(1)
 
     def run(self):
-        """Start the banking application"""
         print(text2art("SQI      Bank"))
 
         print("WELCOME TO SQI BANK...")
-        time.sleep(1)
-        print("Database connected successfully!")
         time.sleep(1)
 
         self.display_welcome_menu()
 
         if self.conn:
             self.conn.close()
-            print("Database connection closed.")
 
 
-if __name__ == "__main__":
-    app = BankingApplication()
-    app.run()
+# if __name__ == "__main__":
+app = BankingApplication()
+app.run()
+
