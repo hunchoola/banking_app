@@ -23,7 +23,6 @@ def generate_account_number(cursor):
             return account_number
         
 
-
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
