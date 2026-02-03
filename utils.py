@@ -1,4 +1,7 @@
-import random, hashlib, getpass
+import random
+import hashlib
+import getpass
+
 
 def validate_password(password):
     if len(password) < 8:
@@ -13,18 +16,19 @@ def validate_password(password):
 
     return True, "Strong password"
 
+
 def generate_account_number(cursor):
     while True:
-        account_number = "2" + \
-            str(random.randint(0000000, 9999999)).zfill(7)
+        account_number = "2" + str(random.randint(0000000, 9999999)).zfill(7)
         cursor.execute(
             "SELECT id FROM users WHERE account_number = ?", (account_number,))
         if not cursor.fetchone():
             return account_number
-        
+
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
+
 
 def validate_username(cursor, username):
     if len(username) < 3 or len(username) > 20:
